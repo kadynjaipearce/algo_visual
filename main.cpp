@@ -8,6 +8,8 @@
 #include "imgui_impl_opengl3.h"
 #include <GLFW/glfw3.h>
 
+#define ARR_SIZE 16
+
 int main() {
     // 1. Initialize GLFW
     if (!glfwInit()) return EXIT_FAILURE;
@@ -35,9 +37,10 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // --- YOUR APP STATE ---
-    std::vector<float> values(100);
-    for (int i = 0; i < 100; ++i) values[i] = (float)i / 100.0f;
+    std::vector<float> values(ARR_SIZE);
+    for (int i = 0; i < ARR_SIZE; ++i) values[i] = (float)i + 1;
+
+    float temp = (float)ARR_SIZE;
 
     // 4. Main Loop
     while (!glfwWindowShouldClose(window)) {
@@ -48,7 +51,6 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // --- THE "STANDALONE" TRICK ---
         // We set the next window to cover the ENTIRE GLFW window area
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(io.DisplaySize);
@@ -67,8 +69,28 @@ int main() {
         // Draw the visualizer bars
         // ImGui::PlotHistogram allows us to visualize the vector instantly
         ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
-        ImGui::PlotHistogram("##Values", values.data(), (int)values.size(), 0, nullptr, 0.0f, 1.0f, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y));
+        ImGui::PlotHistogram("##Values", values.data(), (int)values.size(), 0, nullptr, 0.0f, (float)temp, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 100));
         ImGui::PopStyleColor();
+
+        ImGui::Spacing();
+        ImGui::Separator();
+
+        if (ImGui::Button("Shuffle Array")) {
+            std::shuffle(values.begin(), values.end(), std::default_random_engine());
+        }
+
+        if (ImGui::Button("Double Array")) {
+            int lenght = values.size();
+
+            for (int i = lenght; i < lenght * 2; ++i) {
+                values.push_back((float)(values.size() + 1));
+            }
+
+            temp = (float)values.size();
+
+            std::shuffle(values.begin(), values.end(), std::default_random_engine());
+        }
+
 
         ImGui::End(); // End MainVisualizer
 
