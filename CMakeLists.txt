@@ -18,7 +18,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui)
 
-add_executable(algo_visual main.cpp)
+add_executable(algo_visual main.cpp
+        arraysort.h)
 
 target_sources(${PROJECT_NAME} PRIVATE
         ${imgui_SOURCE_DIR}/imgui.cpp
@@ -36,4 +37,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 find_package(OpenGL REQUIRED)
-target_link_libraries(${PROJECT_NAME} glfw opengl32)
+
+if(APPLE)
+    find_library(CORE_VIDEO CoreVideo REQUIRED)
+    find_library(IO_KIT IOKit REQUIRED)
+    find_library(COCOA Cocoa REQUIRED)
+    find_library(OPENGL_LIB OpenGL REQUIRED)
+    target_link_libraries(${PROJECT_NAME} glfw ${OPENGL_LIB} ${COCOA} ${IO_KIT} ${CORE_VIDEO})
+else()
+    target_link_libraries(${PROJECT_NAME} glfw opengl32)
+endif()

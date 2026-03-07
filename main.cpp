@@ -2,6 +2,8 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include <chrono>
+#include <thread>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -11,11 +13,23 @@
 #define ARR_SIZE 16
 
 int main() {
-    // 1. Initialize GLFW
     if (!glfwInit()) return EXIT_FAILURE;
 
+    #ifdef __APPLE__
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
+    #endif
+
     // Use a modern OpenGL version
+    #ifdef __APPLE__
+    const char* glsl_version = "#version 150";
+    #else
     const char* glsl_version = "#version 130";
+    #endif
+
+
     GLFWwindow* window = glfwCreateWindow(1280, 720, "Algorithm Visualizer", nullptr, nullptr);
     if (!window) return EXIT_FAILURE;
 
@@ -40,9 +54,7 @@ int main() {
     std::vector<float> values(ARR_SIZE);
     for (int i = 0; i < ARR_SIZE; ++i) values[i] = (float)i + 1;
 
-    float temp = (float)ARR_SIZE;
 
-    // 4. Main Loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -75,22 +87,12 @@ int main() {
         ImGui::Spacing();
         ImGui::Separator();
 
-        if (ImGui::Button("Shuffle Array")) {
-            std::shuffle(values.begin(), values.end(), std::default_random_engine());
-        }
-
-        if (ImGui::Button("Double Array")) {
-            int lenght = values.size();
-
-            for (int i = lenght; i < lenght * 2; ++i) {
-                values.push_back((float)(values.size() + 1));
-            }
-
-            temp = (float)values.size();
-
-            std::shuffle(values.begin(), values.end(), std::default_random_engine());
-        }
-
+        (ImGui::Button("Bubble Sort"));
+        ImGui::Button("Selection Sort");
+        ImGui::Button("Insertion Sort");
+        ImGui::Button("Merge Sort");
+        ImGui::Button("Quick Sort");
+        ImGui::Button("Double Array");
 
         ImGui::End(); // End MainVisualizer
 
@@ -113,5 +115,5 @@ int main() {
     glfwDestroyWindow(window);
     glfwTerminate();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
