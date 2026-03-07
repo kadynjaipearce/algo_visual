@@ -1,25 +1,20 @@
-//
-// Created by Kadyn-Jai Pearce on 6/3/2026.
-//
-
 #include <vector>
 #include <mutex>
-#include <thread>
 #include <atomic>
 
 namespace ArraySort {
     extern std::mutex dataMutex;
     extern std::atomic<bool> isSorting;
 
-    void bubbleSort(std::vector<float> &arr);
+    void bubbleSort(std::vector<float> &arr, float delay);
 
-    void selectionSort(std::vector<float> &arr);
+    void selectionSort(std::vector<float> &arr, float delay);
 
-    void insertionSort(std::vector<float> &arr);
+    void insertionSort(std::vector<float> &arr, float delay);
 
-    void mergeSort(std::vector<float> &arr);
+    void mergeSort(std::vector<float> &arr, float delay);
 
-    void quickSort(std::vector<float> &arr);
+    void quickSort(std::vector<float> &arr, float delay);
 }
 
 #ifndef ALGO_VISUAL_ARRAYSORT_H

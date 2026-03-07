@@ -18,7 +18,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui)
 
-add_executable(algo_visual main.cpp
+add_executable(algo_visual src/main.cpp
         src/arraysort.h
         src/arraysort.cpp)
 
