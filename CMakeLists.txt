@@ -19,7 +19,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(imgui)
 
 add_executable(algo_visual main.cpp
-        arraysort.h)
+        src/arraysort.h
+        src/arraysort.cpp)
 
 target_sources(${PROJECT_NAME} PRIVATE
         ${imgui_SOURCE_DIR}/imgui.cpp

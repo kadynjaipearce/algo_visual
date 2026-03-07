@@ -1,36 +1,38 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
 #include <random>
 #include <chrono>
 #include <thread>
+#include <mutex>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <GLFW/glfw3.h>
 
+#include "src/arraysort.h"
+
 #define ARR_SIZE 16
 
 int main() {
     if (!glfwInit()) return EXIT_FAILURE;
 
-    #ifdef __APPLE__
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
-    #endif
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
+#endif
 
     // Use a modern OpenGL version
-    #ifdef __APPLE__
-    const char* glsl_version = "#version 150";
-    #else
-    const char* glsl_version = "#version 130";
-    #endif
+#ifdef __APPLE__
+    const char *glsl_version = "#version 150";
+#else
+    const char *glsl_version = "#version 130";
+#endif
 
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Algorithm Visualizer", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(1280, 720, "Algorithm Visualizer", nullptr, nullptr);
     if (!window) return EXIT_FAILURE;
 
     glfwMakeContextCurrent(window);
@@ -39,12 +41,12 @@ int main() {
     // 2. Setup ImGui Context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Keyboard controls
 
     // Setup Style
     ImGui::StyleColorsDark();
-    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiStyle &style = ImGui::GetStyle();
     style.WindowRounding = 0.0f;
 
     // 3. Setup Platform/Renderer backends
@@ -52,8 +54,7 @@ int main() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     std::vector<float> values(ARR_SIZE);
-    for (int i = 0; i < ARR_SIZE; ++i) values[i] = (float)i + 1;
-
+    for (int i = 0; i < ARR_SIZE; ++i) values[i] = (float) i + 1;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -81,20 +82,40 @@ int main() {
         // Draw the visualizer bars
         // ImGui::PlotHistogram allows us to visualize the vector instantly
         ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
-        ImGui::PlotHistogram("##Values", values.data(), (int)values.size(), 0, nullptr, 0.0f, (float)temp, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 100));
+        ImGui::PlotHistogram("##Values", values.data(), (int) values.size(), 0, nullptr, 0.0f, (float) ARR_SIZE,
+                             ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 100));
         ImGui::PopStyleColor();
 
         ImGui::Spacing();
         ImGui::Separator();
 
-        (ImGui::Button("Bubble Sort"));
+        ImGui::BeginGroup();
+
+        if (ImGui::Button("Shuffle Data") && !ArraySort::isSorting) {
+            std::shuffle(std::begin(values), std::end(values), std::default_random_engine());
+        }
+
+        ImGui::EndGroup();
+
+        ImGui::BeginGroup();
+
+        if (ImGui::Button("Bubble Sort") && !ArraySort::isSorting) {
+            ArraySort::isSorting = true;
+
+            std::thread(ArraySort::bubbleSort, std::ref(values)).detach();
+        }
         ImGui::Button("Selection Sort");
         ImGui::Button("Insertion Sort");
         ImGui::Button("Merge Sort");
         ImGui::Button("Quick Sort");
         ImGui::Button("Double Array");
 
+        ImGui::EndGroup();
+
+
         ImGui::End(); // End MainVisualizer
+
+        std::lock_guard<std::mutex> lock(ArraySort::dataMutex);
 
         // 5. Rendering
         ImGui::Render();
