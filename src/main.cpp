@@ -48,6 +48,9 @@ int main() {
     ImGui::StyleColorsDark();
     ImGuiStyle &style = ImGui::GetStyle();
     style.WindowRounding = 0.0f;
+    style.FrameRounding = 0.0f;
+    style.Colors[ImGuiCol_Button] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+    style.Colors[ImGuiCol_Button] = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
 
     // 3. Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -79,59 +82,78 @@ int main() {
 
         ImGui::Text("Algorithm Visualizer | Elements: %zu", values.size());
         ImGui::Separator();
-
         ImGui::Spacing();
 
-        // Draw the visualizer bars
-        // ImGui::PlotHistogram allows us to visualize the vector instantly
-        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
-        ImGui::PlotHistogram("##Values", values.data(), (int) values.size(), 0, nullptr, 0.0f, (float) arraySize,
-                             ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 100));
-        ImGui::PopStyleColor();
+        static float footer_height = 120.0f;
+
+        ImGui::BeginChild("ViewPort", ImVec2(0, -footer_height), true);
+
+            // Draw the visualizer bars
+            // ImGui::PlotHistogram allows us to visualize the vector instantly
+            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
+            ImGui::PlotHistogram("##Values", values.data(), (int) values.size(), 0, nullptr, 0.0f, (float) arraySize,
+                             ImGui::GetContentRegionAvail());
+            ImGui::PopStyleColor();
+
+        ImGui::EndChild();
 
         ImGui::Spacing();
-        ImGui::Separator();
+        ImGui::Text("Controls:");
 
         ImGui::BeginGroup();
+            ImGui::SetNextItemWidth(200.0f);
+            ImGui::DragFloat("Animation Speed", &delayValue, 0.005f, 0.0f, 1.0f, "%.3f s");
 
-        ImGui::SliderFloat("Delay", &delayValue, 0.0f, 1.0f);
+            if (ImGui::Button("Double Array") && !ArraySort::isSorting) {
+                arraySize *= 2;
 
-        if (ImGui::Button("Double Array") && !ArraySort::isSorting) {
-            arraySize = arraySize * 2;
-
-            for (int i = values.size(); i < arraySize; ++i) {
-                values.push_back((float) i + 1);
+                for (int i = values.size(); i < arraySize; ++i) {
+                    values.push_back((float) i + 1);
+                }
             }
-        }
+            ImGui::SameLine();
 
-        if (ImGui::Button("Shuffle Data") && !ArraySort::isSorting) {
-            std::shuffle(std::begin(values), std::end(values), std::default_random_engine());
-        }
-
+            if (ImGui::Button("Shuffle Data") && !ArraySort::isSorting) {
+                std::shuffle(std::begin(values), std::end(values), std::default_random_engine());
+            }
         ImGui::EndGroup();
+
+        ImGui::SameLine(0, 40);
 
         ImGui::BeginGroup();
 
-        if (ImGui::Button("Bubble Sort") && !ArraySort::isSorting) {
-            ArraySort::isSorting = true;
+            if (ImGui::Button("Bubble Sort") && !ArraySort::isSorting) {
+                ArraySort::isSorting = true;
 
-            std::thread(ArraySort::bubbleSort, std::ref(values), delayValue).detach();
-        }
-        if (ImGui::Button("Selection Sort")) {
-            ArraySort::isSorting = true;
+                std::thread(ArraySort::bubbleSort, std::ref(values), delayValue).detach();
+            }
+            ImGui::SameLine();
 
-            std::thread(ArraySort::selectionSort, std::ref(values), delayValue).detach();
-        }
-        if (ImGui::Button("Insertion Sort") && !ArraySort::isSorting) {
-            ArraySort::isSorting = true;
+            if (ImGui::Button("Selection Sort")) {
+                ArraySort::isSorting = true;
 
-            std::thread(ArraySort::insertionSort, std::ref(values), delayValue).detach();
-        }
-        ImGui::Button("Merge Sort");
-        ImGui::Button("Quick Sort");
+                std::thread(ArraySort::selectionSort, std::ref(values), delayValue).detach();
+            }
+            ImGui::SameLine();
+
+            if (ImGui::Button("Insertion Sort")) {
+                ArraySort::isSorting = true;
+
+                std::thread(ArraySort::insertionSort, std::ref(values), delayValue).detach();
+            }
+            ImGui::SameLine();
+
+            if (ImGui::Button("Merge Sort")) {
+                ArraySort::isSorting = true;
+
+                std::thread(ArraySort::mergeSort, std::ref(values), delayValue).detach();
+            }
+            ImGui::SameLine();
+
+            ImGui::Button("Quick Sort");
+            ImGui::SameLine();
 
         ImGui::EndGroup();
-
 
         ImGui::End(); // End MainVisualizer
 

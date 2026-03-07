@@ -72,9 +72,65 @@ void ArraySort::selectionSort(std::vector<float> &arr, float delay) {
     isSorting = false;
 }
 
-void ArraySort::mergeSort(std::vector<float> &arr, float delay) {
-    isSorting = false;
+void Merge(std::vector<float>& data, int left, int mid, int right, float delay) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+    std::vector<int> L(n1), R(n2);
 
+    for (int i = 0; i < n1; i++) L[i] = data[left + i];
+    for (int j = 0; j < n2; j++) R[j] = data[mid + 1 + j];
+
+    int i = 0, j = 0, k = left;
+
+    // Add isSorting check to every loop
+    while (i < n1 && j < n2 && ArraySort::isSorting) {
+        {
+            std::lock_guard<std::mutex> lock(ArraySort::dataMutex);
+            if (L[i] <= R[j]) {
+                data[k] = L[i];
+                i++; // Only increment i
+            } else {
+                data[k] = R[j];
+                j++; // Only increment j
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(delay * 10)));
+        k++;
+    }
+
+    // ALWAYS lock when touching 'data'
+    while (i < n1 && ArraySort::isSorting) {
+        {
+            std::lock_guard<std::mutex> lock(ArraySort::dataMutex);
+            data[k] = L[i];
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(delay * 10)));
+        i++; k++;
+    }
+
+    while (j < n2 && ArraySort::isSorting) {
+        {
+            std::lock_guard<std::mutex> lock(ArraySort::dataMutex);
+            data[k] = R[j];
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(delay * 10)));
+        j++; k++;
+    }
+}
+
+void MergeSortInternal(std::vector<float>& data, int left, int right, float delay) {
+    if (left < right && ArraySort::isSorting) {
+        int mid = left + (right - left) / 2;
+        MergeSortInternal(data, left, mid, delay);
+        MergeSortInternal(data, mid + 1, right, delay);
+        Merge(data, left, mid, right, delay);
+    }
+}
+
+void ArraySort::mergeSort(std::vector<float> &arr, float delay) {
+    MergeSortInternal(arr, 0, (int)arr.size() - 1, delay);
+
+    ArraySort::isSorting = false;
 }
 
 void ArraySort::quickSort(std::vector<float> &arr, float delay) {
