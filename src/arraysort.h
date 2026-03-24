@@ -12,6 +12,8 @@ namespace ArraySort {
 
     void insertionSort(std::vector<float> &arr, float delay);
 
+    void brickSort(std::vector<float> &arr, float delay);
+
     void mergeSort(std::vector<float> &arr, float delay);
 
     void quickSort(std::vector<float> &arr, float delay);

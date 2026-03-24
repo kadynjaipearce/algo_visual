@@ -143,6 +143,13 @@ int main() {
             }
             ImGui::SameLine();
 
+            if (ImGui::Button("Brick Sort")) {
+                ArraySort::isSorting = true;
+
+                std::thread(ArraySort::brickSort, std::ref(values), delayValue).detach();
+            }
+            ImGui::SameLine();
+
             if (ImGui::Button("Merge Sort")) {
                 ArraySort::isSorting = true;
 
@@ -150,7 +157,11 @@ int main() {
             }
             ImGui::SameLine();
 
-            ImGui::Button("Quick Sort");
+            if (ImGui::Button("Quick Sort")) {
+                ArraySort::isSorting = true;
+
+                std::thread(ArraySort::quickSort, std::ref(values), delayValue).detach();
+            };
             ImGui::SameLine();
 
         ImGui::EndGroup();

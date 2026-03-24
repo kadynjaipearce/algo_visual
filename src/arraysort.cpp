@@ -72,6 +72,37 @@ void ArraySort::selectionSort(std::vector<float> &arr, float delay) {
     isSorting = false;
 }
 
+void ArraySort::brickSort(std::vector<float> &arr, float delay) {
+    bool sorted = false;
+
+    while (!sorted) {
+        sorted = true;
+        for (int i = 1; i < arr.size() - 1; i+=2) {
+            if (arr[i] > arr[i + 1]) {
+                {
+                    std::lock_guard<std::mutex> lock(dataMutex);
+                    std::swap(arr[i], arr[i + 1]);
+                }
+                sorted = false;
+            }
+        };
+
+        for (int i = 0; i < arr.size() - 1; i+=2) {
+            if (arr[i] > arr[i + 1]) {
+                {
+                    std::lock_guard<std::mutex> lock(dataMutex);
+                    std::swap(arr[i], arr[i + 1]);
+                }
+                sorted = false;
+            }
+        };
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(delay * 100)));
+    }
+
+    isSorting = false;
+}
+
 void Merge(std::vector<float>& data, int left, int mid, int right, float delay) {
     int n1 = mid - left + 1;
     int n2 = right - mid;
@@ -129,10 +160,50 @@ void MergeSortInternal(std::vector<float>& data, int left, int right, float dela
 
 void ArraySort::mergeSort(std::vector<float> &arr, float delay) {
     MergeSortInternal(arr, 0, (int)arr.size() - 1, delay);
-
     ArraySort::isSorting = false;
 }
 
+
+int partition(std::vector<float> &arr, int low, int high, float delay) {
+    float pivot = arr[low];
+    int i = low;
+    
+    for (int j = low + 1; j <= high; j++) {
+        if (arr[j] < pivot) {
+            i++;
+            {
+                std::lock_guard<std::mutex> lock(ArraySort::dataMutex);
+                std::swap(arr[i], arr[j]);
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(delay * 100)));
+    }
+    
+    {
+        std::lock_guard<std::mutex> lock(ArraySort::dataMutex);
+        std::swap(arr[low], arr[i]);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(delay * 100)));
+    
+    return i;
+}
+
+std::vector<float> quickSortInternal(std::vector<float> &arr, int low, int high, float delay) {
+    if (low < high && ArraySort::isSorting) {
+        int pivot = partition(arr, low, high, delay);
+        
+        quickSortInternal(arr, low, pivot - 1, delay);
+        quickSortInternal(arr, pivot + 1, high, delay);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(delay * 100)));
+    }
+
+    return arr;
+}
+
 void ArraySort::quickSort(std::vector<float> &arr, float delay) {
+    isSorting = true;
+    quickSortInternal(arr, 0, arr.size() - 1, delay);
     isSorting = false;
 }
